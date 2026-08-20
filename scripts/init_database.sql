@@ -49,3 +49,5 @@ create schema gold;
 go
 
 
+create ddl
+
