@@ -49,5 +49,5 @@ create schema gold;
 go
 
 
-create ddl bronze
+create ddl bronze.crm
 
