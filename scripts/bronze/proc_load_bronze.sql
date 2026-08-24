@@ -23,11 +23,6 @@ Usage example:
 
 
 
-
---===================================================
---  TRUNCATE TABLES THEN LOAD TABLES WITH BULK INSERT
---===================================================
-
 CREATE or ALTER PROCEDURE bronze.load_bronze AS
 
 BEGIN
