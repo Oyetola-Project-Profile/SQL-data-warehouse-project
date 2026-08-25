@@ -28,3 +28,7 @@ Develop SQL-based analytics to deliver detailed insights into:
 - **Product Performance**
 - **Sales Trends**
 ---
+<details>
+<summary>Click to expand</summary>
+Project in progress...
+</details>
