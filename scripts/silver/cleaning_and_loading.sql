@@ -23,12 +23,13 @@ if OBJECT_ID ('silver.crm_prd_info','U') is not null
 Create table silver.crm_prd_info
 (
 	prd_id int,
+	cat_id nvarchar(50),
 	prd_key nvarchar(50),
 	prd_nm  nvarchar(50),
 	prd_cost int,
 	prd_line nvarchar(20),
-	prd_start_dt datetime,
-	prd_end_dt datetime,
+	prd_start_dt date,
+	prd_end_dt date,
 	dwh_create_date datetime2 default getdate()
 );
 go
@@ -41,15 +42,19 @@ Create table silver.crm_sales_details
 	sls_ord_num nvarchar(50),
 	sls_prd_key nvarchar(50),
 	sls_cust_id int,
-	sls_order_dt int,
-	sls_ship_dt int,
-	sls_due_dt int,
+	sls_order_dt date,
+	sls_ship_dt date,
+	sls_due_dt date,
 	sls_sales int,
 	sls_quantity int,
 	sls_price int,
 	dwh_create_date datetime2 default getdate()
 );
 go
+
+
+
+
 
 
 
@@ -88,6 +93,16 @@ Create table silver.erp_px_cat_g1v2
 	dwh_create_date datetime2 default getdate()
 );
 go
+
+
+
+
+--=============================================
+--CLEAN     bronze.crm_cust_info AND  
+--LOAD INTO silver.crm_cust_info
+--=============================================
+
+
 
 
 --=======================================
@@ -207,7 +222,9 @@ SELECT [cst_id]
 --silver.crm_cust_info
 --==================================================
 
-
+PRINT '>>TRUNCATING TABLE: silver.crm_cust_info'
+TRUNCATE TABLE silver.crm_cust_info
+PRINT '>>INSERT DATA INTO: silver.crm_cust_info '
 INSERT INTO silver.crm_cust_info
 (
 	   [cst_id]
@@ -309,9 +326,11 @@ FROM silver.crm_cust_info
 
 
 --=============================================
---CLEAN AND LOAD INTO 
---silver.crm_prd_info
+--CLEAN     bronze.crm_prd_info AND  
+--LOAD INTO silver.crm_prd_info
 --=============================================
+
+
 
 
 
@@ -432,7 +451,9 @@ SELECT
 --INSERTING INTO SILVER LAYER TABLE:
 --silver.crm_prd_info
 --==================================================
-
+PRINT '>>TRUNCATING TABLE: silver.crm_prd_info'
+TRUNCATE TABLE silver.crm_prd_info
+PRINT '>>INSERT DATA INTO: silver.crm_prd_info '
 INSERT INTO silver.crm_prd_info
 (
 [prd_id]
@@ -589,11 +610,11 @@ SELECT * FROM silver.crm_prd_info
 
 
 
---=============================================
---CLEAN AND LOAD INTO 
---silver.crm_sales_details
---=============================================
 
+--=============================================
+--CLEAN     bronze.crm_sales_details AND  
+--LOAD INTO silver.crm_sales_details
+--=============================================
 
 
 --CHECKING COLUMN [sls_prd_key] & [sls_cust_id] IN bronze.crm_sales_details
@@ -787,15 +808,16 @@ SELECT
             THEN sls_sales / NULLIF(sls_quantity,0)
             ELSE ABS(sls_price)
        END sls_price
-FROM bronze.crm_sales_details;
-go
+FROM bronze.crm_sales_details
 
 
 
 --========================================
 --INSERTING INTO SILVER.CRM_SALES_DETAILS
 --========================================
-
+PRINT '>>TRUNCATING TABLE: silver.crm_sales_details'
+TRUNCATE TABLE silver.crm_sales_details
+PRINT '>>INSERT DATA INTO: silver.crm_sales_details '
 INSERT INTO silver.crm_sales_details
 (      [sls_ord_num]
       ,[sls_prd_key]
@@ -824,27 +846,508 @@ SELECT
             THEN NULL
             ELSE CAST(CAST(sls_due_dt AS NVARCHAR (50)) AS DATE)
        END sls_due_dt
-      ,CASE  WHEN [sls_sales] <= 0 OR [sls_sales] IS NULL 
+      ,CASE  WHEN sls_sales <= 0 OR sls_sales IS NULL OR 
+                    sls_sales != sls_quantity * ABS(sls_price)
             THEN sls_quantity * ABS(sls_price)
-            ELSE [sls_sales]
+            ELSE sls_sales
         END  sls_sales
-      ,[sls_quantity]
+      ,sls_quantity
       ,CASE WHEN sls_price IS NULL OR sls_price <= 0 
             THEN sls_sales / NULLIF(sls_quantity,0)
             ELSE ABS(sls_price)
        END sls_price
-FROM bronze.crm_sales_details;
-go
+FROM bronze.crm_sales_details
 
-SELECT * FROM silver.crm_sales_details
+SELECT *  FROM bronze.crm_sales_details
 
-
-
-
-
+--================================
+--TESTING silver.crm_sales_details
+--================================
 
 
 
+--TESTING COLUMN [sls_prd_key] & [sls_cust_id] IN silver.crm_sales_details
+
+--TESTING the sls_ord_num column for whitespaces
+--This should return no result
+SELECT 
+       [sls_ord_num]
+FROM [DataWarehouse].[silver].[crm_sales_details] 
+WHERE sls_ord_num != TRIM(sls_ord_num)
 
 
 
+--TESTING for sls_prd_key column not in silver.crm_prd_info
+--This should return no records
+SELECT 
+       [sls_ord_num]
+      ,[sls_prd_key]
+      ,[sls_cust_id]
+FROM [DataWarehouse].[silver].[crm_sales_details] 
+WHERE sls_prd_key NOT IN (SELECT prd_key FROM silver.crm_prd_info)
+
+
+--TESTING for sls_cust_id column not in silver.crm_cust_info
+--This should return no records
+SELECT 
+       [sls_ord_num]
+      ,[sls_prd_key]
+      ,[sls_cust_id]
+FROM [DataWarehouse].[silver].[crm_sales_details] 
+WHERE [sls_cust_id] NOT IN (SELECT cst_id FROM silver.crm_cust_info)
+
+
+
+
+
+
+
+
+--TESTING FOR INVALID DATES 
+
+--The following code will fail because of invalid dates
+--Invalid dates are date values with:
+--zeros or < 0 or 
+--!= 8 that the integer is < or > 8 digits. 
+--For example 20261301 indicates 13th month
+--So first we need to treat invalid dates in the code
+
+
+
+--TESTING DATE COLUMNS for invalid dates or format
+Select 
+    NULLIF (sls_order_dt,0) as sls_order_dt
+from silver.crm_sales_details
+where   sls_order_dt < 0        OR
+        sls_order_dt = 0        OR
+        LEN(sls_order_dt) != 8  OR
+        sls_order_dt > 20251201 OR
+        sls_order_dt < 19001201
+
+
+--TESTING DATE COLUMNS for invalid dates orders
+SELECT *
+FROM silver.crm_sales_details
+WHERE sls_order_dt > sls_ship_dt
+    or sls_order_dt > sls_due_dt
+     
+
+
+
+
+--TEST BUSINESS RULES FOR Sales, Quantity and Price COLUMNS
+-- >> Quantity * Price = Sales
+-- >> Negative values, zeros or Null is not allowed
+
+
+SELECT DISTINCT
+    sls_sales,
+    sls_quantity,
+    sls_price
+FROM silver.crm_sales_details
+WHERE sls_price * sls_quantity != sls_sales
+OR      sls_price IS NULL OR sls_quantity IS NULL OR sls_sales IS NULL
+OR      sls_price <= 0  OR sls_quantity <= 0 OR sls_sales <= 0
+
+
+
+
+
+
+
+--=============================================
+--CLEAN     bronze.erp_cust_az12 AND  
+--LOAD INTO silver.erp_cust_az12
+--=============================================
+
+
+
+--CHECKING cid in bronze.erp_cust_az12 against cst_key in silver.crm_cust_info
+
+SELECT CID
+FROM bronze.erp_cust_az12
+WHERE cid NOT IN 
+	(SELECT cst_key FROM silver.crm_cust_info)
+
+
+--TRANSFORMATION FOR  cid COLUMN in bronze.erp_cust_az12 against cst_key in silver.crm_cust_info
+WITH cte AS
+(
+	SELECT 
+		cid,
+			CASE WHEN cid LIKE '%NAS%'
+				 THEN SUBSTRING(cid,4,LEN(cid))
+				 ELSE cid
+			END AS cid_new,
+		BDATE,
+		GEN
+	FROM bronze.erp_cust_az12
+)
+SELECT cid, cid_new 
+FROM cte
+WHERE cid_new NOT IN 
+	(SELECT cst_key FROM silver.crm_cust_info)
+
+
+
+
+--CHECKING BDATE column data type
+EXEC SP_HELP 'bronze.erp_cust_az12'
+
+
+
+--CHECKING OUT OF RANGE DATE (WITH EARLIEST BEING 100 YEARS)
+SELECT BDATE
+FROM bronze.erp_cust_az12
+WHERE BDATE < '1926-01-01' OR BDATE > GETDATE()
+
+
+--TRANSFORMATION FOR OUT OF RANGE DATE 
+SELECT BDATE,
+	CASE WHEN BDATE > GETDATE()
+		 THEN NULL
+		 ELSE BDATE
+	END BDATE_new
+FROM bronze.erp_cust_az12
+WHERE BDATE < '1926-01-01' OR BDATE > GETDATE()
+
+
+--CHECKING DATA STANDADIZATION AND CONSISTENCY
+
+SELECT DISTINCT GEN
+FROM bronze.erp_cust_az12
+
+
+
+--TRANSFORMING GEN COLUMN 
+SELECT DISTINCT GEN,
+	CASE	WHEN TRIM(GEN) IS NULL THEN 'n/a'
+			WHEN TRIM(GEN) = ''	 THEN 'n/a'
+			WHEN TRIM(GEN) = 'F' THEN 'Female'
+			WHEN TRIM(GEN) = 'M' THEN 'Male'
+			ELSE GEN
+	END AS GEN
+FROM bronze.erp_cust_az12
+
+
+
+
+
+--=============================
+--CLEANING AND TRANSFORMING 
+--bronze.erp_cust_az12
+--=============================
+
+SELECT 
+    CID,
+    CASE WHEN cid LIKE '%NAS%'
+				 THEN SUBSTRING(cid,4,LEN(cid))
+				 ELSE cid
+	END AS cid_new,
+    BDATE,
+    CASE WHEN BDATE > GETDATE()
+		 THEN NULL
+		 ELSE BDATE
+	END BDATE_new,
+    GEN,
+    CASE	WHEN TRIM(GEN) IS NULL THEN 'n/a'
+			WHEN TRIM(GEN) = ''	 THEN 'n/a'
+			WHEN TRIM(GEN) = 'F' THEN 'Female'
+			WHEN TRIM(GEN) = 'M' THEN 'Male'
+			ELSE GEN
+	END AS GEN_new
+FROM bronze.erp_cust_az12
+
+
+
+
+
+--==================================================
+--INSERTING INTO SILVER LAYER TABLE:
+--silver.erp_cust_az12
+--==================================================
+PRINT '>>TRUNCATING TABLE: silver.erp_cust_az12'
+TRUNCATE TABLE silver.erp_cust_az12
+PRINT '>>INSERT DATA INTO: silver.erp_cust_az12 '
+
+INSERT INTO silver.erp_cust_az12
+(
+    CID,
+    BDATE,
+    GEN
+)
+SELECT 
+    CASE WHEN cid LIKE '%NAS%'
+				 THEN SUBSTRING(cid,4,LEN(cid))
+				 ELSE cid
+	END AS CID,
+    CASE WHEN BDATE > GETDATE()
+		 THEN NULL
+		 ELSE BDATE
+	END BDATE,
+    CASE	WHEN TRIM(GEN) IS NULL THEN 'n/a'
+			WHEN TRIM(GEN) = ''	 THEN 'n/a'
+			WHEN TRIM(GEN) = 'F' THEN 'Female'
+			WHEN TRIM(GEN) = 'M' THEN 'Male'
+			ELSE GEN
+	END AS GEN
+FROM bronze.erp_cust_az12
+
+
+
+SELECT * FROM silver.erp_cust_az12
+
+
+--=============================
+--TESTING silver.erp_cust_az12
+--=============================
+
+--TESTING cid in bronze.erp_cust_az12 against cst_key in silver.crm_cust_info
+SELECT CID
+FROM silver.erp_cust_az12
+WHERE cid LIKE '%NAS%'
+	
+
+
+--TESTING OUT OF RANGE DATE (WITH EARLIEST BEING 100 YEARS)
+SELECT BDATE
+FROM silver.erp_cust_az12
+WHERE  BDATE > GETDATE()
+
+
+
+--TESTING DATA STANDADIZATION AND CONSISTENCY
+SELECT DISTINCT GEN
+FROM silver.erp_cust_az12
+
+
+
+
+
+
+--=============================================
+--CLEAN      bronze.erp_loc_a101 AND 
+--LOAD INTO  silver.erp_loc_a101
+--=============================================
+
+
+
+--CHECKING CID COLUMN IN bronze.erp_loc_a101
+
+SELECT 
+    CID,
+    CNTRY
+FROM bronze.erp_loc_a101
+WHERE CID NOT IN  
+        (SELECT cst_key FROM silver.crm_cust_info)
+
+
+--TRANSFORMING CID COLUMN IN bronze.erp_loc_a101
+
+SELECT 
+    REPLACE(CID,'-','') AS CID,
+    CNTRY
+FROM bronze.erp_loc_a101
+WHERE REPLACE(CID,'-','') NOT IN 
+        (SELECT cst_key FROM silver.crm_cust_info)
+
+
+
+
+
+--CHECKING CNTRY COLUMN IN bronze.erp_loc_a101
+SELECT DISTINCT CNTRY
+FROM bronze.erp_loc_a101
+
+
+
+--TRANSFORMING CNTRY COLUMN IN bronze.erp_loc_a101
+SELECT DISTINCT CNTRY,
+        CASE WHEN TRIM(CNTRY) = 'DE' THEN 'Germany'
+             WHEN TRIM(CNTRY) IN ('us','USA') THEN 'United States'
+             WHEN TRIM(CNTRY) IS NULL OR  TRIM(CNTRY) = '' THEN 'n/a'
+             ELSE CNTRY
+        END AS CNTRY_NEW
+FROM bronze.erp_loc_a101
+
+
+
+
+--=============================
+--CLEANING AND TRANSFORMING 
+--bronze.erp_loc_a101
+--=============================
+SELECT
+     REPLACE(CID,'-','') AS CID,
+    CASE WHEN TRIM(CNTRY) = 'DE' THEN 'Germany'
+             WHEN TRIM(CNTRY) IN ('us','USA') THEN 'United States'
+             WHEN TRIM(CNTRY) IS NULL OR  TRIM(CNTRY) = '' THEN 'n/a'
+             ELSE CNTRY
+    END AS CNTRY
+FROM bronze.erp_loc_a101
+
+
+
+--==================================================
+--INSERTING INTO SILVER LAYER TABLE:
+--silver.erp_loc_a101
+--==================================================
+PRINT '>>TRUNCATING TABLE: silver.erp_loc_a101'
+TRUNCATE TABLE silver.erp_loc_a101
+PRINT '>>INSERT DATA INTO: silver.erp_loc_a101 '
+
+INSERT INTO silver.erp_loc_a101
+(
+    CID,
+    CNTRY
+)
+SELECT
+     REPLACE(CID,'-','') AS CID,
+    CASE WHEN TRIM(CNTRY) = 'DE' THEN 'Germany'
+             WHEN TRIM(CNTRY) IN ('us','USA') THEN 'United States'
+             WHEN TRIM(CNTRY) IS NULL OR  TRIM(CNTRY) = '' THEN 'n/a'
+             ELSE CNTRY
+    END AS CNTRY
+FROM bronze.erp_loc_a101
+
+
+--TESTING CID COLUMN IN silver.erp_loc_a101
+SELECT * FROM silver.erp_loc_a101
+WHERE CID LIKE '%AW-0%'
+
+
+--TESTING CNTRY COLUMN IN silver.erp_loc_a101
+SELECT DISTINCT CNTRY
+FROM silver.erp_loc_a101
+
+SELECT * FROM silver.erp_loc_a101
+WHERE CNTRY IS NULL 
+  OR  CNTRY = '' 
+  OR CNTRY = 'US' 
+  OR CNTRY = 'DE' 
+  OR CNTRY = 'USA'
+
+
+
+
+--=============================================
+--CLEAN      bronze.erp_px_cat_g1v2 AND 
+--LOAD INTO  silver.erp_px_cat_g1v2
+--=============================================
+
+--CHECKING FOR LEADING OR TRAILING SPACES
+SELECT 
+    ID,
+    CAT,
+    SUBCAT,
+    MAINTENANCE
+FROM bronze.erp_px_cat_g1v2
+WHERE ID != TRIM(ID) 
+        OR CAT != TRIM(CAT) 
+        OR SUBCAT != TRIM(SUBCAT) 
+        OR MAINTENANCE != TRIM(MAINTENANCE)
+
+--CHECKING FOR NULL OR BLANK VALUE IN THE ID COLUMN
+SELECT 
+    ID,
+    CAT,
+    SUBCAT,
+    MAINTENANCE
+FROM bronze.erp_px_cat_g1v2
+WHERE ID IS NULL OR ID = ' '
+
+--CHECKING DATA STANDARDIZATION AND CONSISTENCY
+SELECT DISTINCT
+    MAINTENANCE
+FROM bronze.erp_px_cat_g1v2
+
+--CHECKING IDs bronze.erp_px_cat_g1v2 NOT FOUND IN silver.crm_prd_info
+--THERE IS ONLY ONE 'CO_PD'
+SELECT ID
+FROM bronze.erp_px_cat_g1v2
+WHERE ID NOT IN (SELECT cat_id FROM silver.crm_prd_info)
+
+
+SELECT * 
+FROM bronze.erp_px_cat_g1v2
+WHERE id LIKE '%CO_P%'
+
+SELECT * 
+FROM silver.crm_prd_info
+WHERE cat_id LIKE '%CO_P%'
+
+
+
+--=============================
+--CLEANING AND TRANSFORMING 
+--bronze.erp_px_cat_g1v2
+--=============================
+
+/*NO TRANSFORMATION NEEDED ON bronze.erp_loc_a1012  */
+
+
+
+
+--==================================================
+--INSERTING INTO SILVER LAYER TABLE:
+--silver.erp_px_cat_g1v2
+--==================================================
+PRINT '>>TRUNCATING TABLE: silver.erp_px_cat_g1v2'
+TRUNCATE TABLE silver.erp_px_cat_g1v2
+PRINT '>>INSERT DATA INTO: silver.erp_px_cat_g1v2 '
+INSERT INTO silver.erp_px_cat_g1v2
+(
+    ID,
+    CAT,
+    SUBCAT,
+    MAINTENANCE
+)
+SELECT 
+    ID,
+    CAT,
+    SUBCAT,
+    MAINTENANCE 
+FROM bronze.erp_px_cat_g1v2
+
+
+SELECT * FROM silver.erp_px_cat_g1v2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--=============================================
+--CLEAN      bronze.erp_loc_a101 AND 
+--LOAD INTO  silver.erp_loc_a101
+--=============================================
+
+
+--=============================
+--CLEANING AND TRANSFORMING 
+--bronze.erp_loc_a1012
+--=============================
+
+
+--==================================================
+--INSERTING INTO SILVER LAYER TABLE:
+--silver.erp_loc_a101
+--==================================================
