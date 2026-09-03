@@ -31,4 +31,5 @@ Develop SQL-based analytics to deliver detailed insights into:
 <details>
 <summary>Click to expand</summary>
 Project in progress...
+Now on the Gold Layer.
 </details>
