@@ -1,5 +1,24 @@
 
+/*
+===================================================================================
+Quality Checks and Test
+===================================================================================
+Script Purpose:
+	This script performs various quality checks for data consistency, accuracy,
+	and standardization across the 'silver' schemas. It includes checks for:
+	-Unwanted spaces in string fields.
+	-Null or duplicate primary keys.
+	-Invalid date ranges and orders.
+	-Data standardization and consistency.
+	-Data consistency between related fields.
 
+Usage Notes:
+	-Run these checks after data loading silver layer.
+	-Investigate and resolve any discrepancies found during checks.
+
+
+===================================================================================
+*/
 
 --=============================================
 --CLEAN     bronze.crm_cust_info AND  
