@@ -1,4 +1,4 @@
-# Data Warehouse and Analytics Project  
+# Data Warehouse and Engineering Project  
 Building a modern data warehouse with SQL Server, including ETL Processing , data modeling and analytics.  
 
 ---
