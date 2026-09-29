@@ -1,10 +1,22 @@
+/*
+===============================================================================
+Script Purpose:
+    This script creates tables in the 'silver' schema, dropping existing tables 
+    if they already exist.
+	  Run this script to re-define the DDL structure of 'bronze' Tables
+===============================================================================
+*/
+
+
 --=========================================================
---  TEST IF TABLES EXSIT AND CREATE TABLES FOR SILVER LAYER
+--  TEST IF TABLES EXIST AND CREATE TABLES FOR SILVER LAYER
 --=========================================================
 
 
 if OBJECT_ID ('silver.crm_cust_info','U') is not null
 	DROP TABLE silver.crm_cust_info;
+GO
+	
 Create table silver.crm_cust_info 
 (
 	cst_id int,
@@ -21,6 +33,8 @@ go
 
 if OBJECT_ID ('silver.crm_prd_info','U') is not null
 	DROP TABLE silver.crm_prd_info;
+Go
+	
 Create table silver.crm_prd_info
 (
 	prd_id int,
@@ -38,6 +52,8 @@ go
 
 IF OBJECT_ID('silver.crm_sales_details','U' ) IS NOT NULL
 	DROP TABLE silver.crm_sales_details;
+Go
+	
 Create table silver.crm_sales_details
 (
 	sls_ord_num nvarchar(50),
@@ -56,6 +72,8 @@ go
 
 IF OBJECT_ID('silver.erp_cust_az12','U' ) IS NOT NULL
 	DROP TABLE silver.erp_cust_az12;
+Go
+	
 Create table silver.erp_cust_az12
 (
 	CID nvarchar(50),
@@ -69,6 +87,8 @@ go
 
 IF OBJECT_ID('silver.erp_loc_a101','U') IS NOT NULL
 	DROP TABLE silver.erp_loc_a101;
+Go
+	
 Create table silver.erp_loc_a101
 (
 	CID nvarchar(50),
@@ -79,7 +99,9 @@ go
 
 
 IF OBJECT_ID('silver.erp_px_cat_g1v2','U') IS NOT NULL
-	DROP TABLE silver.erp_px_cat_g1v2
+	DROP TABLE silver.erp_px_cat_g1v2;
+Go
+	
 Create table silver.erp_px_cat_g1v2
 (
 	ID nvarchar(50),
