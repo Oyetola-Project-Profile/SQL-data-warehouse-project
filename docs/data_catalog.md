@@ -5,10 +5,10 @@
 The Gold Layer is the business-level data representation, structured to support analytical and reporting use cases. It consists of dimension tables and fact tables for specific business metrics.
 
 ---
-**1. gold.dim_customers**
+### **1. gold.dim_customers**
 
-  - Purpose: Stores customer details enriched with demographic and geographic data.
-  - Column:
+  - **Purpose:** Stores customer details enriched with demographic and geographic data.
+  - **Columns:**
 
 |  Column Name  |Data Type  |  Description  |
 |---|---|:---|
@@ -24,10 +24,10 @@ The Gold Layer is the business-level data representation, structured to support 
 |create_date|Date|The date and time when the customer record was created in the system.|
 
 ---
-**2. gold.dim_products**
+### **2. gold.dim_products**
 
-- Purpose: Provides information about the products and their attributes.
-- Column:
+- **Purpose:** Provides information about the products and their attributes.
+- **Columns:**
   
 |  Column Name  |Data Type  |  Description  |
 |---|---|:---|
@@ -45,10 +45,10 @@ The Gold Layer is the business-level data representation, structured to support 
 
 
 ---
-**3. gold.dim_fact**
+### **3. gold.fact_sales**
 
-- Purpose: Stores transactional sales data for analytical purposes.
-- Column:
+- **Purpose:** Stores transactional sales data for analytical purposes.
+- **Columns:**
   
 |  Column Name  |Data Type  |  Description  |
 |---|---|:---|
