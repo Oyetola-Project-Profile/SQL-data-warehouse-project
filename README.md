@@ -19,14 +19,24 @@ Develop a modern data warehouse using SQL Server to consolidate sales data, enab
 - **Integration**: Combine both sources into a single, user-friendly data model designed for analytical queries.
 - **Scope**: Focus on the latest dataset only; historization of data is not required. Meaning no need to implement Slowly Changing Dimension (scd).
 - **Documentation**: Provide clear documentation of the data model to support both business stakeholders and analytics teams. 
----
 
-### BI: Analytics & Reporting (Data Analytics)
-#### Objectives
-Develop SQL-based analytics to deliver detailed insights into:
-- **Customer Behaviour**
-- **Product Performance**
-- **Sales Trends**
+---
+### Tools & Technologies
+- SQL Server
+- SSMS
+- Draw.io
+- Notion
+- GitHub
+
+
+<!-- Tech Stack Badges -->
+![SQL Server](https://shields.io)
+![SSMS](https://shields.io)
+![Draw.io](https://shields.io)
+![Notion](https://shields.io)
+![GitHub](https://shields.io)
+
+
 ---
 <details>
 <summary>Click to expand</summary>
