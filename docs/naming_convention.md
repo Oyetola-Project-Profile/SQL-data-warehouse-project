@@ -26,7 +26,9 @@ This document outlines the naming conventions for schemas, tables, views, column
 - **`<category>_<entity>`**
 	- **`<category>`**: Describes the role of the table, such as dim (dimension) or fact (fact table).
 	- **`<entity>`**: Describes the name of the table, which is aligned with the business domain. (e.g. customers, products, sales).
-	- Examples: dim_customers and fact_sales
+	- Examples:
+ 		- **`dim_customers:`** dimension table for customer data
+   		- **`fact_sales:`** fact table for sales transactions
 
 ----
 ### Column Naming Conventions
