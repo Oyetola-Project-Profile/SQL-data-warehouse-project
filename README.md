@@ -24,6 +24,7 @@ Develop a modern data warehouse using SQL Server to consolidate sales data, enab
 ### Tools & Technologies
 - SQL Server
 - SSMS
+- CSV
 - Draw.io
 - Notion
 - GitHub
