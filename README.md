@@ -41,5 +41,5 @@ Develop a modern data warehouse using SQL Server to consolidate sales data, enab
 ---
 <details>
 <summary>Click to expand</summary>
-Project in progress... Now in documentation.
+Project in progress... Now on documentation.
 </details>
