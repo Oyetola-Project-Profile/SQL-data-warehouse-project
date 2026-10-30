@@ -5,10 +5,11 @@ Welcome to this SQL data warehouse repository. This project demonstrates the bui
 - [Objective](#objective)
 - [Tools & Technologies](#tools--technologies)
 - [Dataset Explained](#dataset-explained)
+- [Project Requirements](#Project-Requirements)
 - [Youtube Videos](#youtube-videos)
 
 ---
-#### Objective
+### Objective
 Develop a modern data warehouse using SQL Server to consolidate sales data for analytical reporting and decision-making.  
 
 ---
@@ -19,6 +20,9 @@ Develop a modern data warehouse using SQL Server to consolidate sales data for a
 - Draw.io
 - Notion
 - GitHub
+
+---
+### Datasets Explained
 
 ---
 ### Project Requirements
@@ -33,6 +37,12 @@ Develop a modern data warehouse using SQL Server to consolidate sales data for a
 - **Scope**: Focus on the latest dataset only; historization of data is not required. Meaning no need to implement Slowly Changing Dimension (scd).
 - **Documentation**: Provide clear documentation of the data model to support both business stakeholders and analytics teams. 
 
+---
+### Youtube Videos
+<details>
+<summary>Click to expand</summary>
+Production in progress.
+</details>
 
 
 ---
