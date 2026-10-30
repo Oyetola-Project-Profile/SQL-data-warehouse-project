@@ -22,7 +22,7 @@ Develop a modern data warehouse using SQL Server to consolidate sales data for a
 - GitHub
 
 ---
-### Datasets Explained
+### Dataset Explained
 
 ---
 ### Project Requirements
