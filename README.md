@@ -1,9 +1,9 @@
 # Data Warehouse and Engineering Project  
-Building a modern data warehouse with SQL Server, including ETL Processing, data modeling, and analytics.  
+Building a modern data warehouse with SQL Server, using ETL Processing, and data modeling.  
 
 ---
-Welcome to this SQL data warehouse and analytics repository.
-This project demonstrates a comprehensive data warehousing and analytics solution, from building a data warehouse to generating actionable insights. Designed as a portfolio project, it highlights industry best practices in data engineering and analytics.  
+Welcome to this SQL data warehouse repository.
+This project demonstrates a comprehensive data warehousing solution. This portfolio project was built using the Extract, Transform and Load process, and it highlights industry best practices in data engineering.  
 
 ---
 ## PROJECT REQUIREMENTS
